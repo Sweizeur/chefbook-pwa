@@ -11,12 +11,12 @@
       html,
       body {
         height: 100%;
-        -webkit-overflow-scrolling: touch;
-        scroll-behavior: smooth;
       }
-      /* These styles disable body scrolling if you are using <ScrollView> */
+      /* These styles enable body scrolling for PWA */
       body {
         overflow: auto;
+        -webkit-overflow-scrolling: touch;
+        scroll-behavior: smooth;
       }
       /* These styles make the root element full-height */
       #root {
@@ -24,65 +24,15 @@
         height: 100%;
         flex: 1;
       }
-      
-      /* Custom styles for React Native Picker on web */
-      select.r-1niwhzg {
-        background-color: #1a1a1a;
-        color: #ffffff;
-        border: 1px solid #333333;
-        border-radius: 8px;
-        padding: 12px 16px;
-        font-size: 18px;
-        font-weight: 600;
-        height: 50px;
-        min-width: 100px;
-        appearance: none;
-        background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23ffffff' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6,9 12,15 18,9'%3e%3c/polyline%3e%3c/svg%3e");
-        background-repeat: no-repeat;
-        background-position: right 12px center;
-        background-size: 16px;
-        padding-right: 40px;
-        cursor: pointer;
-        transition: all 0.2s ease;
-      }
-      
-      select.r-1niwhzg:hover {
-        border-color: #FF6B35;
-        background-color: #2a2a2a;
-      }
-      
-      select.r-1niwhzg:focus {
-        outline: none;
-        border-color: #FF6B35;
-        box-shadow: 0 0 0 2px rgba(255, 107, 53, 0.2);
-      }
-      
-      select.r-1niwhzg option {
-        background-color: #1a1a1a;
-        color: #ffffff;
-        padding: 8px;
-      }
-      
-      /* Fix footer spacing */
-      body {
-        padding-bottom: 20px;
-      }
-      
-      /* Ensure content doesn't get cut off */
-      #root {
-        min-height: 100vh;
-        padding-bottom: 20px;
-      }
     </style>
   <meta name="theme-color" content="#FF6B35">
-<meta name="description" content="Votre livre de recettes personnel">
-<link rel="icon" href="./favicon.ico" />
-<link rel="manifest" href="./manifest.json" />
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="ChefBook">
-  <link rel="apple-touch-icon" href="./icon-192.png">
-</head>
+  <meta name="description" content="Votre livre de recettes personnel">
+  <link rel="icon" href="./favicon.ico" />
+  <link rel="manifest" href="./manifest.json" />
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="ChefBook">
+  <link rel="apple-touch-icon" href="./icon-192.png"></head>
 
   <body>
     <!-- Use static rendering with Expo Router to support running without JavaScript. -->
@@ -91,6 +41,6 @@
     </noscript>
     <!-- The root element for your Expo app. -->
     <div id="root"></div>
-  <script src="./static/js/index-72b8e7d22565edb680c689056efbcdab.js" defer></script>
+  <script src="./static/js/index-86161dfbe8366bc776d3da43b78d9e7a.js" defer></script>
 </body>
 </html>

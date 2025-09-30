@@ -10,26 +10,38 @@ export class WebStorageService {
   static async getRecipes(): Promise<Recipe[]> {
     try {
       const recipesJson = localStorage.getItem(STORAGE_KEYS.RECIPES);
+      console.log('📱 WebStorage: Getting recipes from localStorage');
       if (recipesJson) {
         const recipes = JSON.parse(recipesJson);
-        return recipes.map((recipe: any) => ({
-          ...recipe,
-          createdAt: new Date(recipe.createdAt),
-          updatedAt: new Date(recipe.updatedAt),
-        }));
+        console.log('📱 WebStorage: Found', recipes.length, 'recipes');
+        const processedRecipes = recipes.map((recipe: any) => {
+          console.log('📱 WebStorage: Processing recipe:', recipe.title, 'Image length:', recipe.image?.length || 0);
+          return {
+            ...recipe,
+            createdAt: new Date(recipe.createdAt),
+            updatedAt: new Date(recipe.updatedAt),
+          };
+        });
+        return processedRecipes;
       }
+      console.log('📱 WebStorage: No recipes found in localStorage');
       return [];
     } catch (error) {
-      console.error('Error getting recipes:', error);
+      console.error('❌ WebStorage: Error getting recipes:', error);
       return [];
     }
   }
 
   static async saveRecipes(recipes: Recipe[]): Promise<void> {
     try {
+      console.log('💾 WebStorage: Saving', recipes.length, 'recipes to localStorage');
+      recipes.forEach(recipe => {
+        console.log('💾 WebStorage: Saving recipe:', recipe.title, 'Image length:', recipe.image?.length || 0);
+      });
       localStorage.setItem(STORAGE_KEYS.RECIPES, JSON.stringify(recipes));
+      console.log('✅ WebStorage: Recipes saved successfully');
     } catch (error) {
-      console.error('Error saving recipes:', error);
+      console.error('❌ WebStorage: Error saving recipes:', error);
       throw error;
     }
   }
