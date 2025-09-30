@@ -1,12 +1,12 @@
 const CACHE_NAME = 'chefbook-v1';
 const urlsToCache = [
-  '/chefbook-pwa/',
-  '/chefbook-pwa/index.html',
-  '/chefbook-pwa/manifest.json',
-  '/chefbook-pwa/icon-192.png',
-  '/chefbook-pwa/icon-512.png',
-  '/chefbook-pwa/favicon.ico',
-  '/chefbook-pwa/static/js/index-72b8e7d22565edb680c689056efbcdab.js'
+  'https://sweizeur.github.io/chefbook-pwa/',
+  'https://sweizeur.github.io/chefbook-pwa/index.html',
+  'https://sweizeur.github.io/chefbook-pwa/manifest.json',
+  'https://sweizeur.github.io/chefbook-pwa/icon-192.png',
+  'https://sweizeur.github.io/chefbook-pwa/icon-512.png',
+  'https://sweizeur.github.io/chefbook-pwa/favicon.ico',
+  'https://sweizeur.github.io/chefbook-pwa/static/js/index-72b8e7d22565edb680c689056efbcdab.js'
 ];
 
 self.addEventListener('install', (event) => {
