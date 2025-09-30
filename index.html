@@ -40,33 +40,6 @@
     </noscript>
     <!-- The root element for your Expo app. -->
     <div id="root"></div>
-  <script src="./static/js/index-72b8e7d22565edb680c689056efbcdab.js" defer></script>
-  <!-- Unregister all service workers -->
-  <script>
-    if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.getRegistrations().then(function(registrations) {
-        for(let registration of registrations) {
-          registration.unregister();
-          console.log('Service Worker unregistered');
-        }
-      });
-      
-      // Also try to unregister the current service worker
-      navigator.serviceWorker.ready.then(function(registration) {
-        registration.unregister();
-        console.log('Current Service Worker unregistered');
-      });
-    }
-    
-    // Clear all caches
-    if ('caches' in window) {
-      caches.keys().then(function(names) {
-        for (let name of names) {
-          caches.delete(name);
-          console.log('Cache deleted:', name);
-        }
-      });
-    }
-  </script>
+  <script src="./_expo/static/js/web/index-72b8e7d22565edb680c689056efbcdab.js" defer></script>
 </body>
 </html>
