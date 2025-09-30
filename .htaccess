@@ -1,0 +1,2 @@
+RewriteEngine On
+RewriteRule ^assets/(.*)$ /chefbook-pwa/assets/$1 [R=301,L]
