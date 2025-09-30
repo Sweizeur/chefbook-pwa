@@ -14,6 +14,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { colors } from '../constants/colors';
 import { Category } from '../types';
 import { AdaptiveStorageService as StorageService } from '../services/adaptiveStorage';
+import { NotificationService } from '../services/notificationService';
 
 interface CategoryItemProps {
   category: Category;
@@ -104,7 +105,7 @@ const CategoryManagementScreen: React.FC = () => {
       setCategories(categoriesData);
     } catch (error) {
       console.error('Error loading categories:', error);
-      Alert.alert('Erreur', 'Impossible de charger les catégories');
+      NotificationService.showError('Erreur', 'Impossible de charger les catégories');
     }
   };
 
@@ -123,31 +124,24 @@ const CategoryManagementScreen: React.FC = () => {
   };
 
   const handleDeleteCategory = (categoryId: string) => {
-    Alert.alert(
+    NotificationService.confirm(
       'Supprimer la catégorie',
       'Êtes-vous sûr de vouloir supprimer cette catégorie ? Les recettes associées ne seront pas supprimées.',
-      [
-        { text: 'Annuler', style: 'cancel' },
-        {
-          text: 'Supprimer',
-          style: 'destructive',
-          onPress: async () => {
-            try {
-              await StorageService.deleteCategory(categoryId);
-              await loadCategories();
-            } catch (error) {
-              console.error('Error deleting category:', error);
-              Alert.alert('Erreur', 'Impossible de supprimer la catégorie');
-            }
-          },
-        },
-      ]
+      async () => {
+        try {
+          await StorageService.deleteCategory(categoryId);
+          await loadCategories();
+        } catch (error) {
+          console.error('Error deleting category:', error);
+          NotificationService.showError('Erreur', 'Impossible de supprimer la catégorie');
+        }
+      }
     );
   };
 
   const handleSaveCategory = async () => {
     if (!categoryName.trim()) {
-      Alert.alert('Erreur', 'Le nom de la catégorie est requis');
+      NotificationService.showError('Erreur', 'Le nom de la catégorie est requis');
       return;
     }
 
@@ -171,7 +165,7 @@ const CategoryManagementScreen: React.FC = () => {
       await loadCategories();
     } catch (error) {
       console.error('Error saving category:', error);
-      Alert.alert('Erreur', 'Impossible de sauvegarder la catégorie');
+      NotificationService.showError('Erreur', 'Impossible de sauvegarder la catégorie');
     } finally {
       setLoading(false);
     }
@@ -195,7 +189,7 @@ const CategoryManagementScreen: React.FC = () => {
       }
     } catch (error) {
       console.error('Error moving category up:', error);
-      Alert.alert('Erreur', 'Impossible de déplacer la catégorie');
+      NotificationService.showError('Erreur', 'Impossible de déplacer la catégorie');
     }
   };
 
@@ -217,7 +211,7 @@ const CategoryManagementScreen: React.FC = () => {
       }
     } catch (error) {
       console.error('Error moving category down:', error);
-      Alert.alert('Erreur', 'Impossible de déplacer la catégorie');
+      NotificationService.showError('Erreur', 'Impossible de déplacer la catégorie');
     }
   };
 

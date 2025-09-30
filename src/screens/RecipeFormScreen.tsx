@@ -19,6 +19,7 @@ import { colors } from '../constants/colors';
 import { Recipe, Category } from '../types';
 import { AdaptiveStorageService as StorageService } from '../services/adaptiveStorage';
 import { ImageCompressionService } from '../services/imageCompression';
+import { NotificationService } from '../services/notificationService';
 import { RootStackParamList } from '../navigation/AppNavigator';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RouteProp } from '@react-navigation/native';
@@ -89,14 +90,14 @@ const RecipeFormScreen: React.FC<Props> = ({ navigation, route }) => {
       }
     } catch (error) {
       console.error('Error loading recipe:', error);
-      Alert.alert('Erreur', 'Impossible de charger la recette');
+      NotificationService.showError('Erreur', 'Impossible de charger la recette');
     }
   };
 
   const pickImage = async () => {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (status !== 'granted') {
-      Alert.alert('Permission requise', 'Permission d\'accès à la galerie requise');
+      NotificationService.showError('Permission requise', 'Permission d\'accès à la galerie requise');
       return;
     }
 
@@ -124,7 +125,7 @@ const RecipeFormScreen: React.FC<Props> = ({ navigation, route }) => {
           setImage(compressedImage);
         } catch (error) {
           console.error('❌ Error compressing image:', error);
-          Alert.alert('Erreur', 'Impossible de compresser l\'image');
+          NotificationService.showError('Erreur', 'Impossible de compresser l\'image');
           setImage(imageUri); // Utiliser l'image originale en cas d'erreur
         }
       } else {
@@ -191,7 +192,7 @@ const RecipeFormScreen: React.FC<Props> = ({ navigation, route }) => {
 
   const validateForm = (): boolean => {
     if (!title.trim()) {
-      Alert.alert('Erreur', 'Le titre est requis');
+      NotificationService.showError('Erreur', 'Le titre est requis');
       return false;
     }
     const hours = prepTimeHours ? Number(prepTimeHours) : 0;
@@ -199,21 +200,21 @@ const RecipeFormScreen: React.FC<Props> = ({ navigation, route }) => {
     const totalMinutes = hours * 60 + minutes;
     
     if (totalMinutes <= 0) {
-      Alert.alert('Erreur', 'Le temps de préparation doit être supérieur à 0');
+      NotificationService.showError('Erreur', 'Le temps de préparation doit être supérieur à 0');
       return false;
     }
     if (!selectedCategoryId) {
-      Alert.alert('Erreur', 'Veuillez sélectionner une catégorie');
+      NotificationService.showError('Erreur', 'Veuillez sélectionner une catégorie');
       return false;
     }
     const validIngredients = ingredients.filter(ing => ing.trim());
     if (validIngredients.length === 0) {
-      Alert.alert('Erreur', 'Au moins un ingrédient est requis');
+      NotificationService.showError('Erreur', 'Au moins un ingrédient est requis');
       return false;
     }
     const validInstructions = instructions.filter(inst => inst.trim());
     if (validInstructions.length === 0) {
-      Alert.alert('Erreur', 'Au moins une instruction est requise');
+      NotificationService.showError('Erreur', 'Au moins une instruction est requise');
       return false;
     }
     return true;
@@ -253,7 +254,7 @@ const RecipeFormScreen: React.FC<Props> = ({ navigation, route }) => {
       navigation.goBack();
     } catch (error) {
       console.error('Error saving recipe:', error);
-      Alert.alert('Erreur', 'Impossible de sauvegarder la recette');
+      NotificationService.showError('Erreur', 'Impossible de sauvegarder la recette');
     } finally {
       setLoading(false);
     }
@@ -261,7 +262,7 @@ const RecipeFormScreen: React.FC<Props> = ({ navigation, route }) => {
 
   const handleCreateNewCategory = async () => {
     if (!newCategoryName.trim()) {
-      Alert.alert('Erreur', 'Le nom de la catégorie est requis');
+      NotificationService.showError('Erreur', 'Le nom de la catégorie est requis');
       return;
     }
 
@@ -283,7 +284,7 @@ const RecipeFormScreen: React.FC<Props> = ({ navigation, route }) => {
       await loadCategories();
     } catch (error) {
       console.error('Error creating category:', error);
-      Alert.alert('Erreur', 'Impossible de créer la catégorie');
+      NotificationService.showError('Erreur', 'Impossible de créer la catégorie');
     } finally {
       setLoading(false);
     }

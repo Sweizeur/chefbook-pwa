@@ -16,6 +16,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { colors } from '../constants/colors';
 import { Recipe, Category } from '../types';
 import { AdaptiveStorageService as StorageService } from '../services/adaptiveStorage';
+import { NotificationService } from '../services/notificationService';
 import { RootStackParamList } from '../navigation/AppNavigator';
 import { StackNavigationProp } from '@react-navigation/stack';
 
@@ -153,7 +154,7 @@ const RecipeListScreen: React.FC<Props> = ({ navigation }) => {
       setCategories(categoriesData);
     } catch (error) {
       console.error('Error loading data:', error);
-      Alert.alert('Erreur', 'Impossible de charger les données');
+      NotificationService.showError('Erreur', 'Impossible de charger les données');
     }
   };
 
@@ -170,25 +171,18 @@ const RecipeListScreen: React.FC<Props> = ({ navigation }) => {
   };
 
   const handleDeleteRecipe = (recipeId: string) => {
-    Alert.alert(
+    NotificationService.confirm(
       'Supprimer la recette',
       'Êtes-vous sûr de vouloir supprimer cette recette ?',
-      [
-        { text: 'Annuler', style: 'cancel' },
-        {
-          text: 'Supprimer',
-          style: 'destructive',
-          onPress: async () => {
-            try {
-              await StorageService.deleteRecipe(recipeId);
-              await loadData();
-            } catch (error) {
-              console.error('Error deleting recipe:', error);
-              Alert.alert('Erreur', 'Impossible de supprimer la recette');
-            }
-          },
-        },
-      ]
+      async () => {
+        try {
+          await StorageService.deleteRecipe(recipeId);
+          await loadData();
+        } catch (error) {
+          console.error('Error deleting recipe:', error);
+          NotificationService.showError('Erreur', 'Impossible de supprimer la recette');
+        }
+      }
     );
   };
 
