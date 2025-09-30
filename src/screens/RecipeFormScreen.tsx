@@ -9,6 +9,7 @@ import {
   Alert,
   Modal,
   FlatList,
+  Platform,
 } from 'react-native';
 import { Picker } from '@react-native-picker/picker';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
@@ -17,6 +18,7 @@ import * as ImagePicker from 'expo-image-picker';
 import { colors } from '../constants/colors';
 import { Recipe, Category } from '../types';
 import { AdaptiveStorageService as StorageService } from '../services/adaptiveStorage';
+import { ImageCompressionService } from '../services/imageCompression';
 import { RootStackParamList } from '../navigation/AppNavigator';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RouteProp } from '@react-navigation/native';
@@ -102,11 +104,32 @@ const RecipeFormScreen: React.FC<Props> = ({ navigation, route }) => {
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
       allowsEditing: true,
       aspect: [4, 3],
-      quality: 0.8,
+      quality: 1.0, // Qualité maximale pour la compression manuelle
     });
 
     if (!result.canceled && result.assets[0]) {
-      setImage(result.assets[0].uri);
+      const imageUri = result.assets[0].uri;
+      
+      // Compresser l'image si on est sur web
+      if (Platform.OS === 'web') {
+        try {
+          console.log('🖼️ Compressing image for web storage...');
+          const compressedImage = await ImageCompressionService.compressImage(imageUri, {
+            maxWidth: 800,
+            maxHeight: 600,
+            quality: 0.8,
+            maxSizeKB: 500,
+          });
+          console.log('✅ Image compressed successfully');
+          setImage(compressedImage);
+        } catch (error) {
+          console.error('❌ Error compressing image:', error);
+          Alert.alert('Erreur', 'Impossible de compresser l\'image');
+          setImage(imageUri); // Utiliser l'image originale en cas d'erreur
+        }
+      } else {
+        setImage(imageUri);
+      }
     }
   };
 

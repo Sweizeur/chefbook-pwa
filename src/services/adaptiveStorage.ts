@@ -1,6 +1,6 @@
 import { Platform } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { WebStorageService } from './webStorage';
+import { IndexedDBStorageService } from './indexedDBStorage';
 import { Recipe, Category, AppState } from '../types';
 
 // Service de stockage adaptatif qui utilise AsyncStorage sur mobile et localStorage sur web
@@ -10,7 +10,7 @@ export class AdaptiveStorageService {
   // Recipes
   static async getRecipes(): Promise<Recipe[]> {
     if (this.isWeb) {
-      return WebStorageService.getRecipes();
+      return IndexedDBStorageService.getRecipes();
     } else {
       // Import dynamique pour éviter les erreurs sur web
       const { StorageService } = await import('./storage');
@@ -20,7 +20,7 @@ export class AdaptiveStorageService {
 
   static async saveRecipes(recipes: Recipe[]): Promise<void> {
     if (this.isWeb) {
-      return WebStorageService.saveRecipes(recipes);
+      return IndexedDBStorageService.saveRecipes(recipes);
     } else {
       const { StorageService } = await import('./storage');
       return StorageService.saveRecipes(recipes);
@@ -29,7 +29,7 @@ export class AdaptiveStorageService {
 
   static async addRecipe(recipe: Recipe): Promise<void> {
     if (this.isWeb) {
-      return WebStorageService.addRecipe(recipe);
+      return IndexedDBStorageService.addRecipe(recipe);
     } else {
       const { StorageService } = await import('./storage');
       return StorageService.addRecipe(recipe);
@@ -38,7 +38,7 @@ export class AdaptiveStorageService {
 
   static async updateRecipe(updatedRecipe: Recipe): Promise<void> {
     if (this.isWeb) {
-      return WebStorageService.updateRecipe(updatedRecipe);
+      return IndexedDBStorageService.updateRecipe(updatedRecipe);
     } else {
       const { StorageService } = await import('./storage');
       return StorageService.updateRecipe(updatedRecipe);
@@ -47,7 +47,7 @@ export class AdaptiveStorageService {
 
   static async deleteRecipe(recipeId: string): Promise<void> {
     if (this.isWeb) {
-      return WebStorageService.deleteRecipe(recipeId);
+      return IndexedDBStorageService.deleteRecipe(recipeId);
     } else {
       const { StorageService } = await import('./storage');
       return StorageService.deleteRecipe(recipeId);
@@ -57,7 +57,7 @@ export class AdaptiveStorageService {
   // Categories
   static async getCategories(): Promise<Category[]> {
     if (this.isWeb) {
-      return WebStorageService.getCategories();
+      return IndexedDBStorageService.getCategories();
     } else {
       const { StorageService } = await import('./storage');
       return StorageService.getCategories();
@@ -66,7 +66,7 @@ export class AdaptiveStorageService {
 
   static async saveCategories(categories: Category[]): Promise<void> {
     if (this.isWeb) {
-      return WebStorageService.saveCategories(categories);
+      return IndexedDBStorageService.saveCategories(categories);
     } else {
       const { StorageService } = await import('./storage');
       return StorageService.saveCategories(categories);
@@ -75,7 +75,7 @@ export class AdaptiveStorageService {
 
   static async addCategory(category: Category): Promise<void> {
     if (this.isWeb) {
-      return WebStorageService.addCategory(category);
+      return IndexedDBStorageService.addCategory(category);
     } else {
       const { StorageService } = await import('./storage');
       return StorageService.addCategory(category);
@@ -84,7 +84,7 @@ export class AdaptiveStorageService {
 
   static async updateCategory(updatedCategory: Category): Promise<void> {
     if (this.isWeb) {
-      return WebStorageService.updateCategory(updatedCategory);
+      return IndexedDBStorageService.updateCategory(updatedCategory);
     } else {
       const { StorageService } = await import('./storage');
       return StorageService.updateCategory(updatedCategory);
@@ -93,7 +93,7 @@ export class AdaptiveStorageService {
 
   static async deleteCategory(categoryId: string): Promise<void> {
     if (this.isWeb) {
-      return WebStorageService.deleteCategory(categoryId);
+      return IndexedDBStorageService.deleteCategory(categoryId);
     } else {
       const { StorageService } = await import('./storage');
       return StorageService.deleteCategory(categoryId);
@@ -102,7 +102,7 @@ export class AdaptiveStorageService {
 
   static async reorderCategories(categoryIds: string[]): Promise<void> {
     if (this.isWeb) {
-      return WebStorageService.reorderCategories(categoryIds);
+      return IndexedDBStorageService.reorderCategories(categoryIds);
     } else {
       const { StorageService } = await import('./storage');
       return StorageService.reorderCategories(categoryIds);
@@ -112,7 +112,7 @@ export class AdaptiveStorageService {
   // App State
   static async getAppState(): Promise<AppState> {
     if (this.isWeb) {
-      return WebStorageService.getAppState();
+      return IndexedDBStorageService.getAppState();
     } else {
       const { StorageService } = await import('./storage');
       return StorageService.getAppState();
@@ -121,7 +121,7 @@ export class AdaptiveStorageService {
 
   static async clearAllData(): Promise<void> {
     if (this.isWeb) {
-      return WebStorageService.clearAllData();
+      return IndexedDBStorageService.clearAllData();
     } else {
       const { StorageService } = await import('./storage');
       return StorageService.clearAllData();

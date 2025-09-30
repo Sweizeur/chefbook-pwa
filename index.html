@@ -12,11 +12,9 @@
       body {
         height: 100%;
       }
-      /* These styles enable body scrolling for PWA */
+      /* These styles disable body scrolling if you are using <ScrollView> */
       body {
-        overflow: auto;
-        -webkit-overflow-scrolling: touch;
-        scroll-behavior: smooth;
+        overflow: hidden;
       }
       /* These styles make the root element full-height */
       #root {
@@ -26,13 +24,8 @@
       }
     </style>
   <meta name="theme-color" content="#FF6B35">
-  <meta name="description" content="Votre livre de recettes personnel">
-  <link rel="icon" href="./favicon.ico" />
-  <link rel="manifest" href="./manifest.json" />
-  <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <meta name="apple-mobile-web-app-title" content="ChefBook">
-  <link rel="apple-touch-icon" href="./icon-192.png"></head>
+<meta name="description" content="Votre livre de recettes personnel">
+<link rel="icon" href="/favicon.ico" /></head>
 
   <body>
     <!-- Use static rendering with Expo Router to support running without JavaScript. -->
@@ -41,6 +34,6 @@
     </noscript>
     <!-- The root element for your Expo app. -->
     <div id="root"></div>
-  <script src="./static/js/index-86161dfbe8366bc776d3da43b78d9e7a.js" defer></script>
+  <script src="./static/js/index-37c05fff54aba1f642ea64978baa000c.js" defer></script>
 </body>
 </html>
