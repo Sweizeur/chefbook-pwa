@@ -50,6 +50,22 @@
           console.log('Service Worker unregistered');
         }
       });
+      
+      // Also try to unregister the current service worker
+      navigator.serviceWorker.ready.then(function(registration) {
+        registration.unregister();
+        console.log('Current Service Worker unregistered');
+      });
+    }
+    
+    // Clear all caches
+    if ('caches' in window) {
+      caches.keys().then(function(names) {
+        for (let name of names) {
+          caches.delete(name);
+          console.log('Cache deleted:', name);
+        }
+      });
     }
   </script>
 </body>
