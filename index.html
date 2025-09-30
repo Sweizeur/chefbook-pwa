@@ -11,10 +11,12 @@
       html,
       body {
         height: 100%;
+        -webkit-overflow-scrolling: touch;
+        scroll-behavior: smooth;
       }
       /* These styles disable body scrolling if you are using <ScrollView> */
       body {
-        overflow: hidden;
+        overflow: auto;
       }
       /* These styles make the root element full-height */
       #root {
