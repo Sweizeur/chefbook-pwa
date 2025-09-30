@@ -1,10 +1,12 @@
 const CACHE_NAME = 'chefbook-v1';
 const urlsToCache = [
-  '/',
-  '/_expo/static/js/web/index-72b8e7d22565edb680c689056efbcdab.js',
-  '/manifest.json',
-  '/icon-192.png',
-  '/icon-512.png'
+  './',
+  './index.html',
+  './manifest.json',
+  './icon-192.png',
+  './icon-512.png',
+  './favicon.ico',
+  './_expo/static/js/web/index-72b8e7d22565edb680c689056efbcdab.js'
 ];
 
 self.addEventListener('install', (event) => {
