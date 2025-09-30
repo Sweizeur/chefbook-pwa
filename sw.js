@@ -6,7 +6,7 @@ const urlsToCache = [
   './icon-192.png',
   './icon-512.png',
   './favicon.ico',
-  './_expo/static/js/web/index-72b8e7d22565edb680c689056efbcdab.js'
+  './static/js/index-72b8e7d22565edb680c689056efbcdab.js'
 ];
 
 self.addEventListener('install', (event) => {
