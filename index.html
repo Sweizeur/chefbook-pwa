@@ -12,9 +12,11 @@
       body {
         height: 100%;
       }
-      /* These styles disable body scrolling if you are using <ScrollView> */
+      /* These styles enable body scrolling for PWA */
       body {
-        overflow: hidden;
+        overflow: auto;
+        -webkit-overflow-scrolling: touch;
+        scroll-behavior: smooth;
       }
       /* These styles make the root element full-height */
       #root {
