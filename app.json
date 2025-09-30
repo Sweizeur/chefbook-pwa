@@ -1,30 +1,64 @@
 {
   "expo": {
-    "name": "RecetteApp",
-    "slug": "RecetteApp",
+    "name": "ChefBook",
+    "slug": "chefbook",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
-    "userInterfaceStyle": "light",
+    "userInterfaceStyle": "dark",
     "newArchEnabled": true,
     "splash": {
       "image": "./assets/splash-icon.png",
       "resizeMode": "contain",
-      "backgroundColor": "#ffffff"
+      "backgroundColor": "#0F0F0F"
     },
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "infoPlist": {
+        "NSPhotoLibraryUsageDescription": "Cette application a besoin d'accéder à votre galerie photo pour ajouter des images à vos recettes.",
+        "NSCameraUsageDescription": "Cette application a besoin d'accéder à votre appareil photo pour prendre des photos de vos recettes."
+      },
+      "bundleIdentifier": "com.sweizeur.chefbook"
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
-        "backgroundColor": "#ffffff"
+        "backgroundColor": "#0F0F0F"
       },
       "edgeToEdgeEnabled": true,
-      "predictiveBackGestureEnabled": false
+      "predictiveBackGestureEnabled": false,
+      "permissions": [
+        "android.permission.READ_EXTERNAL_STORAGE",
+        "android.permission.WRITE_EXTERNAL_STORAGE",
+        "android.permission.CAMERA",
+        "android.permission.RECORD_AUDIO"
+      ]
     },
     "web": {
-      "favicon": "./assets/favicon.png"
+      "favicon": "./assets/favicon.png",
+      "bundler": "metro",
+      "name": "ChefBook",
+      "shortName": "ChefBook",
+      "description": "Votre livre de recettes personnel",
+      "startUrl": "/",
+      "display": "standalone",
+      "backgroundColor": "#0F0F0F",
+      "themeColor": "#FF6B35",
+      "orientation": "portrait"
+    },
+    "plugins": [
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "L'application a besoin d'accéder à vos photos pour ajouter des images aux recettes.",
+          "cameraPermission": "L'application a besoin d'accéder à votre appareil photo pour prendre des photos de recettes."
+        }
+      ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "16e78bb1-626c-4d9f-88b9-e71d247dd686"
+      }
     }
   }
 }
