@@ -41,21 +41,16 @@
     <!-- The root element for your Expo app. -->
     <div id="root"></div>
   <script src="./static/js/index-72b8e7d22565edb680c689056efbcdab.js" defer></script>
-  <!-- Service Worker temporarily disabled -->
-  <!--
+  <!-- Service Worker unregister script -->
   <script>
     if ('serviceWorker' in navigator) {
-      window.addEventListener('load', () => {
-        navigator.serviceWorker.register('./sw.js')
-          .then((registration) => {
-            console.log('SW registered: ', registration);
-          })
-          .catch((registrationError) => {
-            console.log('SW registration failed: ', registrationError);
-          });
+      navigator.serviceWorker.getRegistrations().then(function(registrations) {
+        for(let registration of registrations) {
+          registration.unregister();
+          console.log('Service Worker unregistered');
+        }
       });
     }
   </script>
-  -->
 </body>
 </html>
