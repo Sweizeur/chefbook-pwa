@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -10,12 +10,10 @@ import {
   Dimensions,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import ViewShot from 'react-native-view-shot';
 import { colors } from '../constants/colors';
 import { Recipe, Category } from '../types';
 import { AdaptiveStorageService as StorageService } from '../services/adaptiveStorage';
 import { ShareService } from '../services/shareService';
-import ShareableRecipeView from '../components/ShareableRecipeView';
 import { RootStackParamList } from '../navigation/AppNavigator';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RouteProp, useFocusEffect } from '@react-navigation/native';
@@ -36,7 +34,6 @@ const RecipeDetailScreen: React.FC<Props> = ({ navigation, route }) => {
   const [category, setCategory] = useState<Category | null>(null);
   const [loading, setLoading] = useState(true);
   const [sharing, setSharing] = useState(false);
-  const viewShotRef = useRef<ViewShot>(null);
 
   useEffect(() => {
     loadRecipe();
@@ -72,7 +69,10 @@ const RecipeDetailScreen: React.FC<Props> = ({ navigation, route }) => {
     }
   };
 
-  const formatPrepTime = (minutes: number): string => {
+const formatPrepTime = (minutes: number): string | null => {
+  if (!minutes || minutes <= 0) {
+    return null;
+  }
     const hours = Math.floor(minutes / 60);
     const remainingMinutes = minutes % 60;
     
@@ -90,8 +90,7 @@ const RecipeDetailScreen: React.FC<Props> = ({ navigation, route }) => {
 
     setSharing(true);
     try {
-      // Capture and share as image
-      await ShareService.captureAndShareRecipe(viewShotRef, recipe, category || undefined);
+      await ShareService.shareRecipeAsPDF(recipe, category || undefined);
     } catch (error) {
       console.error('Error sharing recipe:', error);
       // Fallback to text sharing
@@ -126,25 +125,22 @@ const RecipeDetailScreen: React.FC<Props> = ({ navigation, route }) => {
     );
   }
 
+  const prepTimeText = formatPrepTime(recipe.prepTime);
+
   return (
     <View style={styles.container}>
-      {/* Hidden ViewShot for sharing */}
-      <View style={styles.hiddenViewShot}>
-        <ViewShot ref={viewShotRef} options={{ format: 'png', quality: 0.9 }}>
-          <ShareableRecipeView recipe={recipe} category={category} />
-        </ViewShot>
-      </View>
-
       <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
         {/* Header */}
         <View style={styles.header}>
           <View style={[styles.categoryBadge, { backgroundColor: category?.color || colors.primary }]}>
             <Text style={styles.categoryText}>{category?.name || 'Sans catégorie'}</Text>
           </View>
-          <View style={styles.timeContainer}>
-            <Ionicons name="time-outline" size={20} color={colors.textSecondary} />
-            <Text style={styles.timeText}>{formatPrepTime(recipe.prepTime)}</Text>
-          </View>
+          {prepTimeText && (
+            <View style={styles.timeContainer}>
+              <Ionicons name="time-outline" size={20} color={colors.textSecondary} />
+              <Text style={styles.timeText}>{prepTimeText}</Text>
+            </View>
+          )}
         </View>
 
         {/* Recipe Image */}
@@ -214,12 +210,6 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: colors.background,
-  },
-  hiddenViewShot: {
-    position: 'absolute',
-    left: -10000,
-    top: -10000,
-    opacity: 0,
   },
   loadingContainer: {
     flex: 1,

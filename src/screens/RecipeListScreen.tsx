@@ -39,7 +39,10 @@ interface CategoryHeaderProps {
   onToggle: () => void;
 }
 
-const formatPrepTime = (minutes: number): string => {
+const formatPrepTime = (minutes: number): string | null => {
+  if (!minutes || minutes <= 0) {
+    return null;
+  }
   const hours = Math.floor(minutes / 60);
   const remainingMinutes = minutes % 60;
   
@@ -81,6 +84,7 @@ const CategoryHeader: React.FC<CategoryHeaderProps> = ({ category, recipeCount, 
 
 const RecipeItem: React.FC<RecipeItemProps> = ({ recipe, categories, onPress, onDelete }) => {
   const category = categories.find(cat => cat.id === recipe.category);
+  const prepTimeText = formatPrepTime(recipe.prepTime);
   
   return (
     <TouchableOpacity style={styles.recipeCard} onPress={onPress}>
@@ -100,10 +104,12 @@ const RecipeItem: React.FC<RecipeItemProps> = ({ recipe, categories, onPress, on
         </Text>
         
         <View style={styles.recipeMeta}>
-          <View style={styles.timeContainer}>
-            <Ionicons name="time-outline" size={16} color={colors.textSecondary} />
-            <Text style={styles.timeText}>{formatPrepTime(recipe.prepTime)}</Text>
-          </View>
+          {prepTimeText && (
+            <View style={styles.timeContainer}>
+              <Ionicons name="time-outline" size={16} color={colors.textSecondary} />
+              <Text style={styles.timeText}>{prepTimeText}</Text>
+            </View>
+          )}
           
           <View style={styles.ingredientsContainer}>
             <Ionicons name="list-outline" size={16} color={colors.textSecondary} />

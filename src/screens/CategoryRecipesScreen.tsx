@@ -25,7 +25,10 @@ interface Props {
   };
 }
 
-const formatPrepTime = (minutes: number): string => {
+const formatPrepTime = (minutes: number): string | null => {
+  if (!minutes || minutes <= 0) {
+    return null;
+  }
   const hours = Math.floor(minutes / 60);
   const remainingMinutes = minutes % 60;
   
@@ -45,6 +48,7 @@ interface RecipeItemProps {
 }
 
 const RecipeItem: React.FC<RecipeItemProps> = ({ recipe, onPress, onDelete }) => {
+  const prepTimeText = formatPrepTime(recipe.prepTime);
   return (
     <TouchableOpacity style={styles.recipeCard} onPress={onPress}>
       <View style={styles.recipeImageContainer}>
@@ -63,10 +67,12 @@ const RecipeItem: React.FC<RecipeItemProps> = ({ recipe, onPress, onDelete }) =>
         </Text>
         
         <View style={styles.recipeMeta}>
-          <View style={styles.timeContainer}>
-            <Ionicons name="time-outline" size={16} color={colors.textSecondary} />
-            <Text style={styles.timeText}>{formatPrepTime(recipe.prepTime)}</Text>
-          </View>
+          {prepTimeText && (
+            <View style={styles.timeContainer}>
+              <Ionicons name="time-outline" size={16} color={colors.textSecondary} />
+              <Text style={styles.timeText}>{prepTimeText}</Text>
+            </View>
+          )}
           
           <View style={styles.ingredientsContainer}>
             <Ionicons name="list-outline" size={16} color={colors.textSecondary} />

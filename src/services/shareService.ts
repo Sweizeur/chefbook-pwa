@@ -1,9 +1,9 @@
-import * as FileSystem from 'expo-file-system';
+import * as FileSystem from 'expo-file-system/legacy';
 import * as Sharing from 'expo-sharing';
 import { Recipe, Category } from '../types';
 import { colors } from '../constants/colors';
 import { Dimensions } from 'react-native';
-import ViewShot from 'react-native-view-shot';
+import { PDFDocument, StandardFonts, rgb } from 'pdf-lib';
 
 const { width } = Dimensions.get('window');
 
@@ -29,39 +29,233 @@ export class ShareService {
     }
   }
 
-  static async captureAndShareRecipe(
-    viewShotRef: React.RefObject<ViewShot>,
-    recipe: Recipe,
-    category?: Category
-  ): Promise<void> {
+  static async shareRecipeAsPDF(recipe: Recipe, category?: Category): Promise<void> {
     try {
-      if (!viewShotRef.current) {
-        throw new Error('ViewShot ref not available');
-      }
+      const base64Pdf = await this.generateRecipePdf(recipe, category);
+      const filePath = `${FileSystem.cacheDirectory}recipe_${recipe.id}_${Date.now()}.pdf`;
+      await FileSystem.writeAsStringAsync(filePath, base64Pdf, {
+        encoding: 'base64',
+      });
 
-      // Essayer de capturer avec différentes options
-      const captureOptions = {
-        format: 'png' as const,
-        quality: 0.8,
-        result: 'tmpfile' as const,
-      };
-
-      const uri = await viewShotRef.current.capture(captureOptions);
-      
       if (await Sharing.isAvailableAsync()) {
-        await Sharing.shareAsync(uri, {
-          mimeType: 'image/png',
+        await Sharing.shareAsync(filePath, {
+          mimeType: 'application/pdf',
           dialogTitle: `Partager la recette: ${recipe.title}`,
         });
       } else {
         throw new Error('Le partage n\'est pas disponible sur cet appareil');
       }
     } catch (error) {
-      console.error('Error capturing and sharing recipe:', error);
-      
-      // Fallback vers le partage de texte si la capture d'image échoue
+      console.error('Error generating PDF recipe:', error);
       console.log('Falling back to text sharing...');
       await this.shareAsTextNative(recipe, category);
+    }
+  }
+
+  private static formatPrepTime(minutes: number): string {
+    const hours = Math.floor(minutes / 60);
+    const remainingMinutes = minutes % 60;
+
+    if (hours > 0 && remainingMinutes > 0) {
+      return `${hours}h${remainingMinutes.toString().padStart(2, '0')}`;
+    } else if (hours > 0) {
+      return `${hours}h`;
+    } else {
+      return `${minutes} min`;
+    }
+  }
+
+  private static escapeHtml(text: string): string {
+    return text
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;');
+  }
+
+  private static async generateRecipePdf(recipe: Recipe, category?: Category): Promise<string> {
+    const pdfDoc = await PDFDocument.create();
+    const pageSize: [number, number] = [595.28, 841.89];
+    let page = pdfDoc.addPage(pageSize);
+    const margin = 36;
+    let cursorY = page.getHeight() - margin;
+
+    const titleFont = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
+    const regularFont = await pdfDoc.embedFont(StandardFonts.Helvetica);
+    const italicFont = await pdfDoc.embedFont(StandardFonts.HelveticaOblique);
+    const textColor = rgb(0.1, 0.1, 0.1);
+    const secondaryColor = rgb(0.4, 0.4, 0.4);
+
+    const addPage = () => {
+      page = pdfDoc.addPage(pageSize);
+      cursorY = page.getHeight() - margin;
+    };
+
+    const ensureSpace = (needed: number) => {
+      if (cursorY - needed < margin) {
+        addPage();
+      }
+    };
+
+    const drawTextLine = (
+      text: string,
+      { font, size, color = textColor }: { font: any; size: number; color?: ReturnType<typeof rgb> },
+    ) => {
+      ensureSpace(size + 6);
+      cursorY -= size;
+      page.drawText(text, {
+        x: margin,
+        y: cursorY,
+        size,
+        font,
+        color,
+      });
+      cursorY -= 6;
+    };
+
+    drawTextLine(recipe.title, { font: titleFont, size: 24 });
+
+    const metaParts: string[] = [];
+    if (category) {
+      metaParts.push(category.name);
+    }
+    if (recipe.prepTime && recipe.prepTime > 0) {
+      metaParts.push(this.formatPrepTime(recipe.prepTime));
+    }
+    if (metaParts.length > 0) {
+      drawTextLine(metaParts.join(' • '), { font: italicFont, size: 12, color: secondaryColor });
+    }
+
+    if (recipe.image) {
+      const embeddedImage = await this.embedImage(pdfDoc, recipe.image);
+      if (embeddedImage) {
+        const maxWidth = page.getWidth() - margin * 2;
+        const maxHeight = 220;
+        const { width: imgW, height: imgH } = embeddedImage.scale(1);
+        const scale = Math.min(maxWidth / imgW, maxHeight / imgH, 1);
+        const drawnWidth = imgW * scale;
+        const drawnHeight = imgH * scale;
+
+        ensureSpace(drawnHeight + 16);
+        page.drawImage(embeddedImage, {
+          x: margin,
+          y: cursorY - drawnHeight,
+          width: drawnWidth,
+          height: drawnHeight,
+        });
+        cursorY -= drawnHeight + 24;
+      }
+    }
+
+    drawTextLine('Ingrédients', { font: titleFont, size: 18 });
+    for (const ingredient of recipe.ingredients) {
+      const lines = this.wrapText(ingredient, regularFont, 12, page.getWidth() - margin * 2 - 14);
+      lines.forEach((line, index) => {
+        const prefix = index === 0 ? '• ' : '  ';
+        drawTextLine(`${prefix}${line}`, { font: regularFont, size: 12 });
+      });
+    }
+
+    cursorY -= 10;
+    drawTextLine('Instructions', { font: titleFont, size: 18 });
+    recipe.instructions.forEach((instruction, stepIndex) => {
+      const lines = this.wrapText(instruction, regularFont, 12, page.getWidth() - margin * 2 - 20);
+      lines.forEach((line, lineIndex) => {
+        const prefix = lineIndex === 0 ? `${stepIndex + 1}. ` : '    ';
+        drawTextLine(`${prefix}${line}`, { font: regularFont, size: 12 });
+      });
+    });
+
+    ensureSpace(32);
+    const footerY = margin + 12;
+    page.drawLine({
+      start: { x: margin, y: footerY + 6 },
+      end: { x: page.getWidth() - margin, y: footerY + 6 },
+      thickness: 0.5,
+      color: rgb(0.8, 0.8, 0.8),
+    });
+    page.drawText('RecetteApp', {
+      x: margin,
+      y: footerY,
+      size: 10,
+      font: regularFont,
+      color: secondaryColor,
+    });
+    const dateText = new Date().toLocaleDateString('fr-FR');
+    page.drawText(dateText, {
+      x: page.getWidth() - margin - regularFont.widthOfTextAtSize(dateText, 10),
+      y: footerY,
+      size: 10,
+      font: regularFont,
+      color: secondaryColor,
+    });
+
+    return pdfDoc.saveAsBase64({ dataUri: false });
+  }
+
+  private static wrapText(text: string, font: any, fontSize: number, maxWidth: number): string[] {
+    const words = text.split(' ');
+    const lines: string[] = [];
+    let currentLine = '';
+
+    words.forEach((word) => {
+      const candidate = currentLine ? `${currentLine} ${word}` : word;
+      const width = font.widthOfTextAtSize(candidate, fontSize);
+      if (width <= maxWidth) {
+        currentLine = candidate;
+      } else {
+        if (currentLine) {
+          lines.push(currentLine);
+        }
+        currentLine = word;
+      }
+    });
+
+    if (currentLine) {
+      lines.push(currentLine);
+    }
+
+    return lines;
+  }
+
+  private static async embedImage(pdfDoc: PDFDocument, imageUri: string) {
+    try {
+      let base64: string | null = null;
+      let mimeType: string | null = null;
+      let tempFile: string | undefined;
+
+      if (imageUri.startsWith('data:')) {
+        const match = imageUri.match(/^data:(.+);base64,(.*)$/);
+        if (match) {
+          mimeType = match[1];
+          base64 = match[2];
+        }
+      } else {
+        let uriToRead = imageUri;
+
+        base64 = await FileSystem.readAsStringAsync(uriToRead, {
+          encoding: FileSystem.EncodingType.Base64,
+        });
+        const extension = uriToRead.split('.').pop()?.toLowerCase();
+        if (extension === 'png') {
+          mimeType = 'image/png';
+        } else {
+          mimeType = 'image/jpeg';
+        }
+      }
+
+      if (!base64) {
+        return null;
+      }
+
+      if (mimeType === 'image/png') {
+        return await pdfDoc.embedPng(base64);
+      }
+      return await pdfDoc.embedJpg(base64);
+    } catch (error) {
+      console.error('Error reading image for PDF:', error);
+      return null;
     }
   }
 
@@ -201,12 +395,22 @@ export class ShareService {
   }
 
   private static generateRecipeText(recipe: Recipe, category?: Category): string {
+    const metaParts: string[] = [];
+    if (category) {
+      metaParts.push(`📂 ${category.name}`);
+    }
+    if (recipe.prepTime && recipe.prepTime > 0) {
+      metaParts.push(`⏱️ ${this.formatPrepTime(recipe.prepTime)}`);
+    }
+
+    const metaLine = metaParts.length > 0 ? metaParts.join(' • ') : '';
+
     return `
 🍽️ ${recipe.title}
-${category ? `📂 ${category.name}` : ''} • ⏱️ ${recipe.prepTime} minutes
+${metaLine}
 
 📋 INGRÉDIENTS:
-${recipe.ingredients.map((ingredient, index) => `• ${ingredient}`).join('\n')}
+${recipe.ingredients.map((ingredient) => `• ${ingredient}`).join('\n')}
 
 👨‍🍳 INSTRUCTIONS:
 ${recipe.instructions.map((instruction, index) => `${index + 1}. ${instruction}`).join('\n')}

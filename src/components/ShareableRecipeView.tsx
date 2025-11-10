@@ -13,7 +13,10 @@ interface ShareableRecipeViewProps {
 }
 
 const ShareableRecipeView: React.FC<ShareableRecipeViewProps> = ({ recipe, category }) => {
-  const formatPrepTime = (minutes: number): string => {
+  const formatPrepTime = (minutes: number): string | null => {
+    if (!minutes || minutes <= 0) {
+      return null;
+    }
     const hours = Math.floor(minutes / 60);
     const remainingMinutes = minutes % 60;
     
@@ -44,6 +47,8 @@ const ShareableRecipeView: React.FC<ShareableRecipeViewProps> = ({ recipe, categ
 
   const optimalHeight = getOptimalHeight();
 
+  const prepTimeText = formatPrepTime(recipe.prepTime);
+
   return (
     <View style={[styles.container, { height: optimalHeight }]}>
       {/* Header with neutral background */}
@@ -54,10 +59,12 @@ const ShareableRecipeView: React.FC<ShareableRecipeViewProps> = ({ recipe, categ
             <View style={[styles.categoryDot, { backgroundColor: category?.color || colors.primary }]} />
             <Text style={styles.categoryText}>{category?.name || 'Sans catégorie'}</Text>
           </View>
-          <View style={styles.timeContainer}>
-            <Text style={styles.timeIcon}>⏱️</Text>
-            <Text style={styles.timeText}>{formatPrepTime(recipe.prepTime)}</Text>
-          </View>
+          {prepTimeText && (
+            <View style={styles.timeContainer}>
+              <Text style={styles.timeIcon}>⏱️</Text>
+              <Text style={styles.timeText}>{prepTimeText}</Text>
+            </View>
+          )}
         </View>
       </View>
 

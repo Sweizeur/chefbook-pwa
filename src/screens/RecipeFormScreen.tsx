@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, useLayoutEffect } from 'react';
 import {
   View,
   Text,
@@ -37,8 +37,8 @@ const RecipeFormScreen: React.FC<Props> = ({ navigation, route }) => {
   const [image, setImage] = useState<string | undefined>();
   const [prepTimeHours, setPrepTimeHours] = useState('');
   const [prepTimeMinutes, setPrepTimeMinutes] = useState('');
-  const [ingredients, setIngredients] = useState<string[]>(['']);
-  const [instructions, setInstructions] = useState<string[]>(['']);
+  const [ingredientsText, setIngredientsText] = useState('');
+  const [instructionsText, setInstructionsText] = useState('');
   const [categories, setCategories] = useState<Category[]>([]);
   const [selectedCategoryId, setSelectedCategoryId] = useState<string>('');
   const [showCategoryModal, setShowCategoryModal] = useState(false);
@@ -81,8 +81,8 @@ const RecipeFormScreen: React.FC<Props> = ({ navigation, route }) => {
         const minutes = totalMinutes % 60;
         setPrepTimeHours(hours > 0 ? hours.toString() : '');
         setPrepTimeMinutes(minutes > 0 ? minutes.toString() : '');
-        setIngredients(recipe.ingredients.length > 0 ? recipe.ingredients : ['']);
-        setInstructions(recipe.instructions.length > 0 ? recipe.instructions : ['']);
+        setIngredientsText(recipe.ingredients.join('\n'));
+        setInstructionsText(recipe.instructions.join('\n'));
         setSelectedCategoryId(recipe.category);
       }
     } catch (error) {
@@ -110,63 +110,7 @@ const RecipeFormScreen: React.FC<Props> = ({ navigation, route }) => {
     }
   };
 
-  const addIngredient = () => {
-    setIngredients([...ingredients, '']);
-  };
-
-  const removeIngredient = (index: number) => {
-    if (ingredients.length > 1) {
-      const newIngredients = ingredients.filter((_, i) => i !== index);
-      setIngredients(newIngredients);
-    }
-  };
-
-  const updateIngredient = (index: number, value: string) => {
-    const newIngredients = [...ingredients];
-    newIngredients[index] = value;
-    
-    // Si on commence à taper dans le dernier ingrédient et qu'il n'est pas vide, ajouter un nouvel ingrédient
-    if (index === ingredients.length - 1 && value.trim() !== '' && ingredients[ingredients.length - 1] === '') {
-      newIngredients.push('');
-    }
-    
-    // Si on efface le contenu et que le champ suivant est vide, supprimer le champ suivant
-    if (value.trim() === '' && index < ingredients.length - 1 && ingredients[index + 1] === '') {
-      newIngredients.splice(index + 1, 1);
-    }
-    
-    setIngredients(newIngredients);
-  };
-
-  const addInstruction = () => {
-    setInstructions([...instructions, '']);
-  };
-
-  const removeInstruction = (index: number) => {
-    if (instructions.length > 1) {
-      const newInstructions = instructions.filter((_, i) => i !== index);
-      setInstructions(newInstructions);
-    }
-  };
-
-  const updateInstruction = (index: number, value: string) => {
-    const newInstructions = [...instructions];
-    newInstructions[index] = value;
-    
-    // Si on commence à taper dans la dernière instruction et qu'elle n'est pas vide, ajouter une nouvelle instruction
-    if (index === instructions.length - 1 && value.trim() !== '' && instructions[instructions.length - 1] === '') {
-      newInstructions.push('');
-    }
-    
-    // Si on efface le contenu et que l'instruction suivante est vide, supprimer l'instruction suivante
-    if (value.trim() === '' && index < instructions.length - 1 && instructions[index + 1] === '') {
-      newInstructions.splice(index + 1, 1);
-    }
-    
-    setInstructions(newInstructions);
-  };
-
-  const validateForm = (): boolean => {
+  const validateForm = useCallback((): boolean => {
     if (!title.trim()) {
       Alert.alert('Erreur', 'Le titre est requis');
       return false;
@@ -174,36 +118,39 @@ const RecipeFormScreen: React.FC<Props> = ({ navigation, route }) => {
     const hours = prepTimeHours ? Number(prepTimeHours) : 0;
     const minutes = prepTimeMinutes ? Number(prepTimeMinutes) : 0;
     const totalMinutes = hours * 60 + minutes;
-    
-    if (totalMinutes <= 0) {
-      Alert.alert('Erreur', 'Le temps de préparation doit être supérieur à 0');
+
+    if (Number.isNaN(totalMinutes) || totalMinutes < 0) {
+      Alert.alert('Erreur', 'Le temps de préparation est invalide');
       return false;
     }
     if (!selectedCategoryId) {
       Alert.alert('Erreur', 'Veuillez sélectionner une catégorie');
       return false;
     }
-    const validIngredients = ingredients.filter(ing => ing.trim());
+    const validIngredients = ingredientsText
+      .split('\n')
+      .map(item => item.trim())
+      .filter(Boolean);
     if (validIngredients.length === 0) {
       Alert.alert('Erreur', 'Au moins un ingrédient est requis');
       return false;
     }
-    const validInstructions = instructions.filter(inst => inst.trim());
+    const validInstructions = instructionsText
+      .split('\n')
+      .map(item => item.trim())
+      .filter(Boolean);
     if (validInstructions.length === 0) {
       Alert.alert('Erreur', 'Au moins une instruction est requise');
       return false;
     }
     return true;
-  };
+  }, [title, prepTimeHours, prepTimeMinutes, selectedCategoryId, ingredientsText, instructionsText]);
 
-  const handleSave = async () => {
+  const handleSave = useCallback(async () => {
     if (!validateForm()) return;
 
     setLoading(true);
     try {
-      const validIngredients = ingredients.filter(ing => ing.trim());
-      const validInstructions = instructions.filter(inst => inst.trim());
-      
       // Calculer le temps total en minutes
       const hours = prepTimeHours ? Number(prepTimeHours) : 0;
       const minutes = prepTimeMinutes ? Number(prepTimeMinutes) : 0;
@@ -215,8 +162,14 @@ const RecipeFormScreen: React.FC<Props> = ({ navigation, route }) => {
         image,
         category: selectedCategoryId,
         prepTime: totalMinutes,
-        ingredients: validIngredients,
-        instructions: validInstructions,
+        ingredients: ingredientsText
+          .split('\n')
+          .map(item => item.trim())
+          .filter(Boolean),
+        instructions: instructionsText
+          .split('\n')
+          .map(item => item.trim())
+          .filter(Boolean),
         createdAt: isEditing ? (await StorageService.getRecipes()).find(r => r.id === recipeId)?.createdAt || new Date() : new Date(),
         updatedAt: new Date(),
       };
@@ -234,7 +187,35 @@ const RecipeFormScreen: React.FC<Props> = ({ navigation, route }) => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [
+    validateForm,
+    prepTimeHours,
+    prepTimeMinutes,
+    selectedCategoryId,
+    ingredientsText,
+    instructionsText,
+    recipeId,
+    isEditing,
+    image,
+    navigation,
+  ]);
+
+  useLayoutEffect(() => {
+    navigation.setOptions({
+      title: isEditing ? 'Modifier la recette' : 'Nouvelle recette',
+      headerRight: () =>
+        isEditing ? (
+          <TouchableOpacity
+            style={[styles.headerSaveButton, loading && styles.headerSaveButtonDisabled]}
+            onPress={handleSave}
+            disabled={loading}
+            hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+          >
+            <Ionicons name="checkmark" size={20} color={colors.text} />
+          </TouchableOpacity>
+        ) : null,
+    });
+  }, [navigation, isEditing, handleSave, loading]);
 
   const handleCreateNewCategory = async () => {
     if (!newCategoryName.trim()) {
@@ -326,7 +307,7 @@ const RecipeFormScreen: React.FC<Props> = ({ navigation, route }) => {
 
         {/* Prep Time Section */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Temps de préparation *</Text>
+          <Text style={styles.sectionTitle}>Temps de préparation</Text>
           <View style={styles.timePickerContainer}>
             <View style={styles.timePickerWrapper}>
               <Text style={styles.timeLabel}>Heures</Text>
@@ -364,75 +345,30 @@ const RecipeFormScreen: React.FC<Props> = ({ navigation, route }) => {
 
         {/* Ingredients Section */}
         <View style={styles.section}>
-          <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>Ingrédients *</Text>
-            <TouchableOpacity onPress={addIngredient} style={styles.addButton}>
-              <Ionicons name="add" size={20} color={colors.primary} />
-            </TouchableOpacity>
-          </View>
-          {ingredients.map((ingredient, index) => (
-            <View key={index} style={styles.listItem}>
-              <TextInput
-                style={styles.listInput}
-                value={ingredient}
-                onChangeText={(value) => updateIngredient(index, value)}
-                placeholder={`Ingrédient ${index + 1}`}
-                placeholderTextColor={colors.textSecondary}
-              />
-              {ingredients.length > 1 && (
-                <TouchableOpacity
-                  onPress={() => removeIngredient(index)}
-                  style={styles.removeButton}
-                >
-                  <Ionicons name="close" size={20} color={colors.error} />
-                </TouchableOpacity>
-              )}
-            </View>
-          ))}
-          
-          {/* Add ingredient button at bottom */}
-          <TouchableOpacity onPress={addIngredient} style={styles.addButtonBottom}>
-            <Ionicons name="add" size={20} color={colors.primary} />
-            <Text style={styles.addButtonText}>Ajouter un ingrédient</Text>
-          </TouchableOpacity>
+          <Text style={styles.sectionTitle}>Ingrédients *</Text>
+          <TextInput
+            style={[styles.textArea, styles.listInput]}
+            value={ingredientsText}
+            onChangeText={setIngredientsText}
+            placeholder={'Un ingrédient par ligne'}
+            placeholderTextColor={colors.textSecondary}
+            multiline
+            textAlignVertical="top"
+          />
         </View>
 
         {/* Instructions Section */}
         <View style={styles.section}>
-          <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>Instructions *</Text>
-            <TouchableOpacity onPress={addInstruction} style={styles.addButton}>
-              <Ionicons name="add" size={20} color={colors.primary} />
-            </TouchableOpacity>
-          </View>
-          {instructions.map((instruction, index) => (
-            <View key={index} style={styles.listItem}>
-              <Text style={styles.stepNumber}>{index + 1}</Text>
-              <TextInput
-                style={[styles.listInput, styles.instructionInput]}
-                value={instruction}
-                onChangeText={(value) => updateInstruction(index, value)}
-                placeholder={`Étape ${index + 1}`}
-                placeholderTextColor={colors.textSecondary}
-                multiline
-                numberOfLines={3}
-              />
-              {instructions.length > 1 && (
-                <TouchableOpacity
-                  onPress={() => removeInstruction(index)}
-                  style={styles.removeButton}
-                >
-                  <Ionicons name="close" size={20} color={colors.error} />
-                </TouchableOpacity>
-              )}
-            </View>
-          ))}
-          
-          {/* Add instruction button at bottom */}
-          <TouchableOpacity onPress={addInstruction} style={styles.addButtonBottom}>
-            <Ionicons name="add" size={20} color={colors.primary} />
-            <Text style={styles.addButtonText}>Ajouter une étape</Text>
-          </TouchableOpacity>
+          <Text style={styles.sectionTitle}>Instructions *</Text>
+          <TextInput
+            style={[styles.textArea, styles.listInput, styles.instructionInput]}
+            value={instructionsText}
+            onChangeText={setInstructionsText}
+            placeholder={'Décrire les étapes, une par ligne'}
+            placeholderTextColor={colors.textSecondary}
+            multiline
+            textAlignVertical="top"
+          />
         </View>
 
         <View style={styles.bottomSpacing} />
@@ -715,8 +651,13 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: colors.text,
   },
+  textArea: {
+    minHeight: 160,
+    paddingVertical: 20,
+    lineHeight: 24,
+  },
   instructionInput: {
-    minHeight: 80,
+    minHeight: 220,
     textAlignVertical: 'top',
   },
   addButton: {
@@ -764,6 +705,16 @@ const styles = StyleSheet.create({
     color: colors.text,
     fontSize: 16,
     fontWeight: '600',
+  },
+  headerSaveButton: {
+    marginRight: 12,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 16,
+    backgroundColor: colors.primary,
+  },
+  headerSaveButtonDisabled: {
+    opacity: 0.6,
   },
   bottomSpacing: {
     height: 20,

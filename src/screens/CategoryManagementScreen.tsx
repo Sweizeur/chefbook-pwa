@@ -1,8 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   View,
   Text,
   TouchableOpacity,
+  TouchableWithoutFeedback,
   StyleSheet,
   TextInput,
   Alert,
@@ -10,6 +11,7 @@ import {
   FlatList,
 } from 'react-native';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
+import { useFocusEffect } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { colors } from '../constants/colors';
 import { Category } from '../types';
@@ -94,11 +96,7 @@ const CategoryManagementScreen: React.FC = () => {
   const [selectedColor, setSelectedColor] = useState(colors.categoryColors[0]);
   const [loading, setLoading] = useState(false);
 
-  useEffect(() => {
-    loadCategories();
-  }, []);
-
-  const loadCategories = async () => {
+  const loadCategories = useCallback(async () => {
     try {
       const categoriesData = await StorageService.getCategories();
       setCategories(categoriesData);
@@ -106,7 +104,17 @@ const CategoryManagementScreen: React.FC = () => {
       console.error('Error loading categories:', error);
       Alert.alert('Erreur', 'Impossible de charger les catégories');
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    loadCategories();
+  }, [loadCategories]);
+
+  useFocusEffect(
+    useCallback(() => {
+      loadCategories();
+    }, [loadCategories])
+  );
 
   const handleAddCategory = () => {
     setEditingCategory(null);
@@ -284,71 +292,73 @@ const CategoryManagementScreen: React.FC = () => {
             activeOpacity={1}
             onPress={() => setShowModal(false)}
           >
-            <View style={styles.modalContent} onStartShouldSetResponder={() => true}>
-            <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>
-                {editingCategory ? 'Modifier la catégorie' : 'Nouvelle catégorie'}
-              </Text>
-              <TouchableOpacity onPress={() => setShowModal(false)}>
-                <Ionicons name="close" size={24} color={colors.text} />
-              </TouchableOpacity>
-            </View>
+            <TouchableWithoutFeedback onPress={() => {}}>
+              <View style={styles.modalContent}>
+                <View style={styles.modalHeader}>
+                  <Text style={styles.modalTitle}>
+                    {editingCategory ? 'Modifier la catégorie' : 'Nouvelle catégorie'}
+                  </Text>
+                  <TouchableOpacity onPress={() => setShowModal(false)}>
+                    <Ionicons name="close" size={24} color={colors.text} />
+                  </TouchableOpacity>
+                </View>
 
-            <View style={styles.modalBody}>
-              {/* Category Name */}
-              <View style={styles.inputSection}>
-                <Text style={styles.inputLabel}>Nom de la catégorie</Text>
-                <TextInput
-                  style={styles.textInput}
-                  value={categoryName}
-                  onChangeText={setCategoryName}
-                  placeholder="Ex: Desserts, Plats principaux..."
-                  placeholderTextColor={colors.textSecondary}
-                />
-              </View>
+                <View style={styles.modalBody}>
+                  {/* Category Name */}
+                  <View style={styles.inputSection}>
+                    <Text style={styles.inputLabel}>Nom de la catégorie</Text>
+                    <TextInput
+                      style={styles.textInput}
+                      value={categoryName}
+                      onChangeText={setCategoryName}
+                      placeholder="Ex: Desserts, Plats principaux..."
+                      placeholderTextColor={colors.textSecondary}
+                    />
+                  </View>
 
-              {/* Color Selection */}
-              <View style={styles.inputSection}>
-                <Text style={styles.inputLabel}>Couleur</Text>
-                <View style={styles.colorGrid}>
-                  {colors.categoryColors.map((color) => (
-                    <TouchableOpacity
-                      key={color}
-                      style={[
-                        styles.colorOption,
-                        { backgroundColor: color },
-                        selectedColor === color && styles.selectedColor,
-                      ]}
-                      onPress={() => setSelectedColor(color)}
-                    >
-                      {selectedColor === color && (
-                        <Ionicons name="checkmark" size={20} color={colors.text} />
-                      )}
-                    </TouchableOpacity>
-                  ))}
+                  {/* Color Selection */}
+                  <View style={styles.inputSection}>
+                    <Text style={styles.inputLabel}>Couleur</Text>
+                    <View style={styles.colorGrid}>
+                      {colors.categoryColors.map((color) => (
+                        <TouchableOpacity
+                          key={color}
+                          style={[
+                            styles.colorOption,
+                            { backgroundColor: color },
+                            selectedColor === color && styles.selectedColor,
+                          ]}
+                          onPress={() => setSelectedColor(color)}
+                        >
+                          {selectedColor === color && (
+                            <Ionicons name="checkmark" size={20} color={colors.text} />
+                          )}
+                        </TouchableOpacity>
+                      ))}
+                    </View>
+                  </View>
+                </View>
+
+                <View style={styles.modalFooter}>
+                  <TouchableOpacity
+                    style={styles.cancelButton}
+                    onPress={() => setShowModal(false)}
+                  >
+                    <Text style={styles.cancelButtonText}>Annuler</Text>
+                  </TouchableOpacity>
+                  
+                  <TouchableOpacity
+                    style={[styles.saveButton, loading && styles.saveButtonDisabled]}
+                    onPress={handleSaveCategory}
+                    disabled={loading}
+                  >
+                    <Text style={styles.saveButtonText}>
+                      {loading ? 'Sauvegarde...' : 'Sauvegarder'}
+                    </Text>
+                  </TouchableOpacity>
                 </View>
               </View>
-            </View>
-
-            <View style={styles.modalFooter}>
-              <TouchableOpacity
-                style={styles.cancelButton}
-                onPress={() => setShowModal(false)}
-              >
-                <Text style={styles.cancelButtonText}>Annuler</Text>
-              </TouchableOpacity>
-              
-              <TouchableOpacity
-                style={[styles.saveButton, loading && styles.saveButtonDisabled]}
-                onPress={handleSaveCategory}
-                disabled={loading}
-              >
-                <Text style={styles.saveButtonText}>
-                  {loading ? 'Sauvegarde...' : 'Sauvegarder'}
-                </Text>
-              </TouchableOpacity>
-            </View>
-            </View>
+            </TouchableWithoutFeedback>
           </TouchableOpacity>
         </KeyboardAwareScrollView>
       </Modal>
